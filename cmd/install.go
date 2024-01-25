@@ -95,7 +95,9 @@ func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
         func(path string, info fs.FileInfo, err error) error {
             fmt.Printf("walking the directory %v. workfing on file %v\n", path,  info.Name())
             switch ext := filepath.Ext(info.Name()); ext {
-            case ".container", ".kube", ".volume", ".network", ".image":
+            //TODO need to copy folder strucure if exists. Like if there's a/foo.yaml
+            // which the foo.kube points at in Yaml=a/foo.yaml
+            case ".container", ".kube", ".volume", ".network", ".image", ".yaml":
                 fmt.Printf("handling file %s\n", ext)
                
                 configDir, err := os.UserConfigDir()
