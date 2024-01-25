@@ -1,5 +1,7 @@
 # pq is a cli to help manage podman quadlets
 
+NOTE: UNDER DEVELOPMENT
+
 ```
 $ pq list
 Listing quadlets from repo https://rgolangh/podman-quadlets (default in ~/.config/pq/pq.yaml)

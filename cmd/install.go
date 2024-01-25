@@ -90,10 +90,10 @@ func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
 		return fmt.Errorf("failed to clone repository: %v", err)
 	}
 
+    filesWritten := false
     filepath.Walk(filepath.Join(destinationPath, directoryPath),
         func(path string, info fs.FileInfo, err error) error {
             fmt.Printf("walking the directory %v. workfing on file %v\n", path,  info.Name())
-            filesWritten := false
             switch ext := filepath.Ext(info.Name()); ext {
             case ".container", ".kube", ".volume", ".network", ".image":
                 fmt.Printf("handling file %s\n", ext)
@@ -119,15 +119,19 @@ func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
             default:
                 fmt.Printf("ignoring %v...\n", ext)
             }
-            if (filesWritten) {
-                 fmt.Println("Finisihed writing files")
-                 fmt.Println("Reloading systemd daemon for the current user")
-                 exec.Command("systemctl", "daemon-relead", "--uesr")
-            } else {
-                fmt.Println("Finished without writing files")
-            }
-            return nil
+           return nil
     })
-    
+    if (filesWritten) {
+        fmt.Println("Finisihed writing files")
+        fmt.Println("Reloading systemd daemon for the current user")
+        cmd := exec.Command("systemctl", "daemon-reload", "--user")
+        if err := cmd.Run(); err != nil {
+            log.Println("Failed reloading systemctal daemon-reload")
+            return err
+        }
+    } else {
+        fmt.Println("Finished without writing files")
+    }
+
 	return nil
 }
