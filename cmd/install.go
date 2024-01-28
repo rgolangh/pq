@@ -127,11 +127,13 @@ func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
 		})
 	if filesWritten {
 		fmt.Println("Finisihed writing files")
-		fmt.Println("Reloading systemd daemon for the current user")
-		cmd := exec.Command("systemctl", "daemon-reload", "--user")
-		if err := cmd.Run(); err != nil {
-			log.Println("Failed reloading systemctal daemon-reload")
-			return err
+        if !noSystemdReload {
+            fmt.Println("Reloading systemd daemon for the current user")
+            cmd := exec.Command("systemctl", "daemon-reload", "--user")
+            if err := cmd.Run(); err != nil {
+                log.Println("Failed reloading systemctal daemon-reload")
+                return err
+            }
 		}
 	} else {
 		fmt.Println("Finished without writing files")
