@@ -27,6 +27,11 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 )
 
+var (
+	repoURL         string
+	noSystemdReload bool
+)
+
 // installCmd represents the install command
 var installCmd = &cobra.Command{
 	Use:   "install",
@@ -37,27 +42,22 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-    Args: cobra.MinimumNArgs(1),
+	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("install called")
-        name := args[0]
+		name := args[0]
 
-        fmt.Printf("Intalling %q...", name) 
+		tmpDir, err := os.MkdirTemp("", "pq")
+		if err != nil {
+			return err
+		}
+		fmt.Println("tmp dir name " + tmpDir)
+		err = downloadDirectory(repoURL, name, tmpDir)
+		if err != nil {
+			return err
+		}
 
-
-        repoURL := "https://github.com/rgolangh/podman-quadlets"
-        tmpDir, err := os.MkdirTemp("", "pq")
-        if err != nil {
-            fmt.Errorf("eeeeeeeeeeeee \n")
-            return err
-        }
-       fmt.Println("tmp dir name " + tmpDir)
-       err = downloadDirectory(repoURL, name, tmpDir)
-       if err != nil {
-           return err
-       }
-       
-        return nil
+		return nil
 	},
 }
 
@@ -74,14 +74,16 @@ func init() {
 	// is called directly, e.g.:
 	// installCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-
-
-
+	installCmd.Flags().StringVarP(
+		&repoURL,
+		"repo",
+		"r",
+		"https://github.com/rgolangh/podman-quadlets",
+		"The repo url (currently only git support), where the quadlets are stored")
 }
 
-
 func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
-    fmt.Println("cloning repo")
+	fmt.Println("cloning repo")
 	// Clone the repository
 	_, err := git.PlainClone(destinationPath, false, &git.CloneOptions{
 		URL: repoURL,
@@ -90,50 +92,50 @@ func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
 		return fmt.Errorf("failed to clone repository: %v", err)
 	}
 
-    filesWritten := false
-    filepath.Walk(filepath.Join(destinationPath, directoryPath),
-        func(path string, info fs.FileInfo, err error) error {
-            fmt.Printf("walking the directory %v. workfing on file %v\n", path,  info.Name())
-            switch ext := filepath.Ext(info.Name()); ext {
-            //TODO need to copy folder strucure if exists. Like if there's a/foo.yaml
-            // which the foo.kube points at in Yaml=a/foo.yaml
-            case ".container", ".kube", ".volume", ".network", ".image", ".yaml":
-                fmt.Printf("handling file %s\n", ext)
-               
-                configDir, err := os.UserConfigDir()
-                 if err != nil {
-                    log.Print("failed reading user config dir")
-                    log.Fatal(err)
-                }
-                dest := filepath.Join(configDir, "containers", "systemd")
+	filesWritten := false
+	filepath.Walk(filepath.Join(destinationPath, directoryPath),
+		func(path string, info fs.FileInfo, err error) error {
+			fmt.Printf("walking the directory %v. workfing on file %v\n", path, info.Name())
+			switch ext := filepath.Ext(info.Name()); ext {
+			//TODO need to copy folder strucure if exists. Like if there's a/foo.yaml
+			// which the foo.kube points at in Yaml=a/foo.yaml
+			case ".container", ".kube", ".volume", ".network", ".image", ".yaml":
+				fmt.Printf("handling file %s\n", ext)
 
-                bytesRead, err := os.ReadFile(path)
-                if err != nil {
-                    log.Print("failed reading file ")
-                    log.Fatal(err)
-                }
+				configDir, err := os.UserConfigDir()
+				if err != nil {
+					log.Print("failed reading user config dir")
+					log.Fatal(err)
+				}
+				dest := filepath.Join(configDir, "containers", "systemd")
 
-                err = os.WriteFile(filepath.Join(dest, info.Name()), bytesRead, 0644)
-                if err != nil {
-                    log.Fatal(err)
-                }
-                filesWritten = true
-            default:
-                fmt.Printf("ignoring %v...\n", ext)
-            }
-           return nil
-    })
-    if (filesWritten) {
-        fmt.Println("Finisihed writing files")
-        fmt.Println("Reloading systemd daemon for the current user")
-        cmd := exec.Command("systemctl", "daemon-reload", "--user")
-        if err := cmd.Run(); err != nil {
-            log.Println("Failed reloading systemctal daemon-reload")
-            return err
-        }
-    } else {
-        fmt.Println("Finished without writing files")
-    }
+				bytesRead, err := os.ReadFile(path)
+				if err != nil {
+					log.Print("failed reading file ")
+					log.Fatal(err)
+				}
+
+				err = os.WriteFile(filepath.Join(dest, info.Name()), bytesRead, 0644)
+				if err != nil {
+					log.Fatal(err)
+				}
+				filesWritten = true
+			default:
+				fmt.Printf("ignoring %v...\n", ext)
+			}
+			return nil
+		})
+	if filesWritten {
+		fmt.Println("Finisihed writing files")
+		fmt.Println("Reloading systemd daemon for the current user")
+		cmd := exec.Command("systemctl", "daemon-reload", "--user")
+		if err := cmd.Run(); err != nil {
+			log.Println("Failed reloading systemctal daemon-reload")
+			return err
+		}
+	} else {
+		fmt.Println("Finished without writing files")
+	}
 
 	return nil
 }

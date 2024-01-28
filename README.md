@@ -20,7 +20,7 @@ Installing quadlet 'kind'
 [#############             ]
 Done
 
-$ pq install kind https://github.com/rgolangh/podman-quadlets
+$ pq install kind --repo https://github.com/rgolangh/podman-quadlets
 Installing quadlet 'kind' from https://github.com/rgolangh/podman-quadlets
 [#############             ]
 Done
