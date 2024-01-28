@@ -94,6 +94,7 @@ func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
 	fmt.Println("cloning repo")
 	// Clone the repository
 	_, err := git.PlainClone(destinationPath, false, &git.CloneOptions{
+        Depth: 1,
 		URL: repoURL,
 	})
 	if err != nil {
