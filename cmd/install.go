@@ -28,8 +28,8 @@ import (
 )
 
 var (
-	repoURL         string
-	noSystemdReload bool
+	repoURL               string
+	noSystemdDaemonReload bool
 )
 
 // installCmd represents the install command
@@ -80,6 +80,14 @@ func init() {
 		"r",
 		"https://github.com/rgolangh/podman-quadlets",
 		"The repo url (currently only git support), where the quadlets are stored")
+	installCmd.Flags().BoolVarP(
+		&noSystemdDaemonReload,
+		"no-systemd-daemon-reload",
+		"",
+		false,
+		"No systemd daemon reloading after installing. Usefull for controlling when to reload the deamon",
+	)
+
 }
 
 func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
@@ -127,13 +135,13 @@ func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
 		})
 	if filesWritten {
 		fmt.Println("Finisihed writing files")
-        if !noSystemdReload {
-            fmt.Println("Reloading systemd daemon for the current user")
-            cmd := exec.Command("systemctl", "daemon-reload", "--user")
-            if err := cmd.Run(); err != nil {
-                log.Println("Failed reloading systemctal daemon-reload")
-                return err
-            }
+		if !noSystemdDaemonReload {
+			fmt.Println("Reloading systemd daemon for the current user")
+			cmd := exec.Command("systemctl", "daemon-reload", "--user")
+			if err := cmd.Run(); err != nil {
+				log.Println("Failed reloading systemctal daemon-reload")
+				return err
+			}
 		}
 	} else {
 		fmt.Println("Finished without writing files")
