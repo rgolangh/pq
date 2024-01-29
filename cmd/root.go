@@ -1,6 +1,4 @@
 /*
-
-
 Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,17 +17,17 @@ package cmd
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-
 	"github.com/spf13/viper"
 )
 
 var (
 	cfgFile string
 	verbose bool
+    log *logrus.Logger
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -71,27 +69,14 @@ func init() {
 }
 
 func setLogging(cmd *cobra.Command, args []string) {
-	level := slog.LevelInfo
-	if verbose {
-		level = slog.LevelDebug
-	}
-	h := slog.NewTextHandler(
-		os.Stdout,
-		&slog.HandlerOptions{
-			Level: level,
-            ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-                if a.Key == "msg" {
-                    return slog.String("", a.Value.String() )
-                } 
-                return slog.Attr{}
-            },
-		},
-	)
-
-
-	slog.SetDefault(slog.New(h))
-
-	slog.Debug("starting with log level ", level)
+    log = logrus.New()
+	log.Formatter = new(logrus.TextFormatter)                     //default
+	log.Formatter.(*logrus.TextFormatter).DisableLevelTruncation = true
+	log.Formatter.(*logrus.TextFormatter).DisableTimestamp = true // remove timestamp from test output
+    if verbose {
+        log.Level = logrus.TraceLevel
+    } 
+	log.Out = os.Stdout
 }
 
 // initConfig reads in config file and ENV variables if set.

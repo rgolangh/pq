@@ -18,7 +18,6 @@ package cmd
 import (
 	"fmt"
 	"io/fs"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,8 +32,8 @@ var listCmd = &cobra.Command{
 	Short: "List the available quadlets",
 	Long:  `List the available quadlets.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		slog.Debug("list called with repo url " + repoURL)
-		slog.Debug("cloning repo")
+		log.Info("Looking for quadlets in ", repoURL)
+		log.Debug("cloning repo", repoURL)
 		workDir, err := os.MkdirTemp("", "pq")
 		if err != nil {
 			return err
@@ -61,15 +60,15 @@ var listCmd = &cobra.Command{
 				}
 				if strings.Count(rel, string(filepath.Separator)) >= 1 {
 					// scanning only 1st level directories
-					slog.Debug("skipping dir " + rel)
+					log.Debug("skipping dir ", rel)
 					return fs.SkipAll
 				}
 				if rel[0] == '.' || info.Name()[0] == '.' {
 					// skip hidden dirs
-					slog.Debug("skipping %q\n", info.Name())
+					log.Debug("skipping ", info.Name())
 					return fs.SkipDir
 				}
-				slog.Info("- " + info.Name())
+				log.Info("- ", info.Name())
 			}
 			return nil
 		})
