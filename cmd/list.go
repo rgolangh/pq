@@ -17,35 +17,72 @@ package cmd
 
 import (
 	"fmt"
+	"io/fs"
+	"log/slog"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "List the available quadlets",
+	Long:  `List the available quadlets.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		slog.Debug("list called with repo url " + repoURL)
+		slog.Debug("cloning repo")
+		workDir, err := os.MkdirTemp("", "pq")
+		if err != nil {
+			return err
+		}
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("list called")
+		// Clone the repository
+		_, err = git.PlainClone(workDir, false, &git.CloneOptions{
+			Depth: 1,
+			URL:   repoURL,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to clone repository: %v", err)
+		}
+
+		filepath.Walk(workDir, func(path string, info fs.FileInfo, err error) error {
+			if info.IsDir() {
+				rel, err := filepath.Rel(workDir, path)
+				if err != nil {
+					return err
+				}
+				if rel == "." {
+					// depth 0
+					return nil
+				}
+				if strings.Count(rel, string(filepath.Separator)) >= 1 {
+					// scanning only 1st level directories
+					slog.Debug("skipping dir " + rel)
+					return fs.SkipAll
+				}
+				if rel[0] == '.' || info.Name()[0] == '.' {
+					// skip hidden dirs
+					slog.Debug("skipping %q\n", info.Name())
+					return fs.SkipDir
+				}
+				slog.Info("- " + info.Name())
+			}
+			return nil
+		})
+		return nil
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(listCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// listCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// listCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	listCmd.Flags().StringVarP(
+		&repoURL,
+		"repo",
+		"r",
+		"https://github.com/rgolangh/podman-quadlets",
+		"The repo url (currently only git support), where the quadlets are stored")
 }

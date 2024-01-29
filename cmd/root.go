@@ -1,11 +1,13 @@
 /*
+
+
 Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,13 +19,18 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile string
+	verbose bool
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -38,6 +45,7 @@ to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
+	PersistentPreRun: setLogging,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -54,10 +62,36 @@ func init() {
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pq.yaml)")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+}
+
+func setLogging(cmd *cobra.Command, args []string) {
+	level := slog.LevelInfo
+	if verbose {
+		level = slog.LevelDebug
+	}
+	h := slog.NewTextHandler(
+		os.Stdout,
+		&slog.HandlerOptions{
+			Level: level,
+            ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+                if a.Key == "msg" {
+                    return slog.String("", a.Value.String() )
+                } 
+                return slog.Attr{}
+            },
+		},
+	)
+
+
+	slog.SetDefault(slog.New(h))
+
+	slog.Debug("starting with log level ", level)
 }
 
 // initConfig reads in config file and ENV variables if set.
