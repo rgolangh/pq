@@ -32,7 +32,7 @@ var listCmd = &cobra.Command{
 	Short: "List the available quadlets",
 	Long:  `List the available quadlets.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		log.Info("Looking for quadlets in ", repoURL)
+		log.Info("Listing quardlets from ", repoURL)
 		log.Debug("cloning repo", repoURL)
 		workDir, err := os.MkdirTemp("", "pq")
 		if err != nil {
