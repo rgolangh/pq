@@ -27,6 +27,7 @@ import (
 )
 
 var (
+	enable                bool
 	repoURL               string
 	noSystemdDaemonReload bool
 )
@@ -43,14 +44,14 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("install called")
+		log.Debug("install called")
 		name := args[0]
 
 		tmpDir, err := os.MkdirTemp("", "pq")
 		if err != nil {
 			return err
 		}
-		fmt.Println("tmp dir name " + tmpDir)
+		log.Debug("tmp dir name " + tmpDir)
 		err = downloadDirectory(repoURL, name, tmpDir)
 		if err != nil {
 			return err
@@ -86,15 +87,22 @@ func init() {
 		false,
 		"No systemd daemon reloading after installing. Usefull for controlling when to reload the deamon",
 	)
+	installCmd.Flags().BoolVarP(
+		&enable,
+		"enable",
+		"",
+		false,
+		"Immediatly enable and load the service into systemd",
+	)
 
 }
 
 func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
-	fmt.Println("cloning repo")
+	log.Info("cloning repo")
 	// Clone the repository
 	_, err := git.PlainClone(destinationPath, false, &git.CloneOptions{
-        Depth: 1,
-		URL: repoURL,
+		Depth: 1,
+		URL:   repoURL,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to clone repository: %v", err)
@@ -103,23 +111,23 @@ func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
 	filesWritten := false
 	filepath.Walk(filepath.Join(destinationPath, directoryPath),
 		func(path string, info fs.FileInfo, err error) error {
-			fmt.Printf("walking the directory %v. workfing on file %v\n", path, info.Name())
+			log.Debugf("walking the directory %v. workfing on file %v\n", path, info.Name())
 			switch ext := filepath.Ext(info.Name()); ext {
 			//TODO need to copy folder strucure if exists. Like if there's a/foo.yaml
 			// which the foo.kube points at in Yaml=a/foo.yaml
 			case ".container", ".kube", ".volume", ".network", ".image", ".yaml":
-				fmt.Printf("handling file %s\n", ext)
+				log.Debugf("handling file %s\n", ext)
 
 				configDir, err := os.UserConfigDir()
 				if err != nil {
-					log.Print("failed reading user config dir")
+					log.Error("failed reading user config dir")
 					log.Fatal(err)
 				}
 				dest := filepath.Join(configDir, "containers", "systemd")
 
 				bytesRead, err := os.ReadFile(path)
 				if err != nil {
-					log.Print("failed reading file ")
+					log.Error("failed reading file ")
 					log.Fatal(err)
 				}
 
@@ -129,22 +137,38 @@ func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
 				}
 				filesWritten = true
 			default:
-				fmt.Printf("ignoring %v...\n", ext)
+				log.Debug("ignoring %v...\n", ext)
 			}
 			return nil
 		})
 	if filesWritten {
-		fmt.Println("Finisihed writing files")
+		log.Debug("Finisihed writing files")
 		if !noSystemdDaemonReload {
-			fmt.Println("Reloading systemd daemon for the current user")
+			log.Info("Reloading systemd daemon for the current user")
 			cmd := exec.Command("systemctl", "daemon-reload", "--user")
-			if err := cmd.Run(); err != nil {
-				log.Println("Failed reloading systemctal daemon-reload")
+			out, err := cmd.Output()
+			if err != nil {
+				log.Error("Failed reloading systemctl daemon-reload")
 				return err
 			}
+			log.Debug(out)
+			if enable {
+				log.Info("Enabling the service for the current user")
+				cmd := exec.Command("systemctl", "enable", "--user", directoryPath+".service")
+				out, err := cmd.Output()
+				if err != nil {
+					log.Error("Failed enabling systemd service")
+					return err
+				}
+				log.Debug(out)
+			}
+			log.Infof("To immediatly start using the installed service run:\n"+
+				"\tsystemctl enable --now --user %s.service\n"+
+				"Alternatively pass --enable to the install command\n",
+				directoryPath)
 		}
 	} else {
-		fmt.Println("Finished without writing files")
+		log.Info("Finished without writing files")
 	}
 
 	return nil
