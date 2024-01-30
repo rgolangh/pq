@@ -33,7 +33,7 @@ var listCmd = &cobra.Command{
 	Long:  `List the available quadlets.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		log.Info("Listing quardlets from ", repoURL)
-		log.Debug("cloning repo", repoURL)
+		log.Debug("cloning repo ", repoURL)
 		workDir, err := os.MkdirTemp("", "pq")
 		if err != nil {
 			return err
@@ -61,7 +61,7 @@ var listCmd = &cobra.Command{
 				if strings.Count(rel, string(filepath.Separator)) >= 1 {
 					// scanning only 1st level directories
 					log.Debug("skipping dir ", rel)
-					return fs.SkipAll
+					return fs.SkipDir
 				}
 				if rel[0] == '.' || info.Name()[0] == '.' {
 					// skip hidden dirs
@@ -84,4 +84,6 @@ func init() {
 		"r",
 		"https://github.com/rgolangh/podman-quadlets",
 		"The repo url (currently only git support), where the quadlets are stored")
+    //TODO add --installed flag that would list the current quadletes in the config dir
 }
+
