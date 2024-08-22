@@ -106,6 +106,9 @@ func listInstalled() error {
 
 	filepath.Walk(filepath.Join(configDir, "containers", "systemd"),
 		func(path string, info fs.FileInfo, err error) error {
+            if info.IsDir() {
+                return nil
+            }
 			log.Debugf("walking the directory %v. workfing on file %v\n", path, info.Name())
 			log.Infof("- %v\n", info.Name())
             return nil

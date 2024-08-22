@@ -13,20 +13,18 @@ Listing quadlets from repo https://rgolangh/podman-quadlets (default in ~/.confi
 $ pq install kind
 Installing quadlet 'kind'
 [#############             ]
-Done
 
 $ pq install kind --systemd-reload
 Installing quadlet 'kind'
 [#############             ]
-Done
 
 $ pq install kind --repo https://github.com/rgolangh/podman-quadlets
 Installing quadlet 'kind' from https://github.com/rgolangh/podman-quadlets
 [#############             ]
-Done
 
-$ pq list installed
+$ pq list --installed
 - kind (on 24/01/2024)
 
+$ pq remove kind
 ```
 
