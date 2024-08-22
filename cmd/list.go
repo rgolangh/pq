@@ -32,6 +32,9 @@ var listCmd = &cobra.Command{
 	Short: "List the available quadlets",
 	Long:  `List the available quadlets.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+        if installed {
+            return listInstalled()
+        }
 		log.Info("Listing quardlets from ", repoURL)
 		log.Debug("cloning repo ", repoURL)
 		workDir, err := os.MkdirTemp("", "pq")
@@ -85,5 +88,27 @@ func init() {
 		"https://github.com/rgolangh/podman-quadlets",
 		"The repo url (currently only git support), where the quadlets are stored")
     //TODO add --installed flag that would list the current quadletes in the config dir
+	listCmd.Flags().BoolVar(
+		&installed,
+		"installed",
+		false,
+		"list only the installed quadlets")
+
 }
 
+func listInstalled() error {
+    log.Info("Listing installed quardlets")
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		log.Error("failed reading user config dir")
+		log.Fatal(err)
+	}
+
+	filepath.Walk(filepath.Join(configDir, "containers", "systemd"),
+		func(path string, info fs.FileInfo, err error) error {
+			log.Debugf("walking the directory %v. workfing on file %v\n", path, info.Name())
+			log.Infof("- %v\n", info.Name())
+            return nil
+        })
+    return nil
+}
