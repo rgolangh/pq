@@ -157,7 +157,7 @@ func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
 				cmd := exec.Command("systemctl", "enable", "--user", directoryPath+".service")
 				out, err := cmd.Output()
 				if err != nil {
-					log.Error("Failed enabling systemd service")
+					log.Errorf("Failed enabling systemd service %v", cmd.Err)
 					return err
 				}
 				log.Debug(out)
