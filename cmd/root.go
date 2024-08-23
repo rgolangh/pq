@@ -27,7 +27,7 @@ import (
 var (
 	cfgFile string
 	verbose bool
-    log *logrus.Logger
+	log     *logrus.Logger
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -69,13 +69,13 @@ func init() {
 }
 
 func setLogging(cmd *cobra.Command, args []string) {
-    log = logrus.New()
-	log.Formatter = new(logrus.TextFormatter)                     //default
+	log = logrus.New()
+	log.Formatter = new(logrus.TextFormatter) //default
 	log.Formatter.(*logrus.TextFormatter).DisableLevelTruncation = true
 	log.Formatter.(*logrus.TextFormatter).DisableTimestamp = true // remove timestamp from test output
-    if verbose {
-        log.Level = logrus.TraceLevel
-    } 
+	if verbose {
+		log.Level = logrus.TraceLevel
+	}
 	log.Out = os.Stdout
 }
 

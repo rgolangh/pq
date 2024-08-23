@@ -26,15 +26,26 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 )
 
+var installDir string
+
+type quadlet struct {
+	name string
+	path string
+}
+
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List the available quadlets",
 	Long:  `List the available quadlets.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-        if installed {
-            return listInstalled()
-        }
+		if installed {
+			quadlets := listInstalled()
+			for _, q := range quadlets {
+				log.Infof(" - %v\n", q.name)
+			}
+			return nil
+		}
 		log.Info("Listing quardlets from ", repoURL)
 		log.Debug("cloning repo ", repoURL)
 		workDir, err := os.MkdirTemp("", "pq")
@@ -87,31 +98,40 @@ func init() {
 		"r",
 		"https://github.com/rgolangh/podman-quadlets",
 		"The repo url (currently only git support), where the quadlets are stored")
-    //TODO add --installed flag that would list the current quadletes in the config dir
 	listCmd.Flags().BoolVar(
 		&installed,
 		"installed",
 		false,
 		"list only the installed quadlets")
 
-}
-
-func listInstalled() error {
-    log.Info("Listing installed quardlets")
 	configDir, err := os.UserConfigDir()
+
 	if err != nil {
 		log.Error("failed reading user config dir")
 		log.Fatal(err)
 	}
+	installDir = filepath.Join(configDir, "containers", "systemd")
+}
 
-	filepath.Walk(filepath.Join(configDir, "containers", "systemd"),
-		func(path string, info fs.FileInfo, err error) error {
-            if info.IsDir() {
-                return nil
-            }
-			log.Debugf("walking the directory %v. workfing on file %v\n", path, info.Name())
-			log.Infof("- %v\n", info.Name())
-            return nil
-        })
-    return nil
+func listInstalled() []quadlet {
+	installed := []quadlet{}
+	log.Debugf("about to walk the install dir %s\n", installDir)
+	filepath.Walk(installDir,
+		func(path string, fileInfo fs.FileInfo, err error) error {
+			if fileInfo.IsDir() {
+				entries, err := os.ReadDir(path)
+				if err != nil {
+					return err
+				}
+				for _, e := range entries {
+					// check if there is an X.container named after the parent directory X
+					if !e.IsDir() && e.Name() == fileInfo.Name()+".container" {
+						installed = append(installed, quadlet{name: fileInfo.Name(), path: path})
+					}
+				}
+			}
+			log.Debugf("walking the directory %v. workfing on file %v\n", path, fileInfo.Name())
+			return nil
+		})
+	return installed
 }

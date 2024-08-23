@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"fmt"
-	"io/fs"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -27,7 +27,6 @@ import (
 )
 
 var (
-	enable                bool
 	repoURL               string
 	installed             bool
 	noSystemdDaemonReload bool
@@ -36,24 +35,23 @@ var (
 // installCmd represents the install command
 var installCmd = &cobra.Command{
 	Use:   "install",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "install a quadlet from a quadlet repo",
+	Long: `Donwload the quadlet folder by NAME and copy 
+it into the $HOME/.config/containers/systemd/
+Files which are not supported should be cleared from the directory
+All quadlet repos should have a directory structure where every quadlet is a top level directory and all the 
+.service , .network files are inside.`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		log.Debug("install called")
-		name := args[0]
+		log.Debugf("install called with args %v\n", args)
+		quadletName := args[0]
 
 		tmpDir, err := os.MkdirTemp("", "pq")
 		if err != nil {
 			return err
 		}
 		log.Debug("tmp dir name " + tmpDir)
-		err = downloadDirectory(repoURL, name, tmpDir)
+		err = downloadDirectory(repoURL, quadletName, tmpDir)
 		if err != nil {
 			return err
 		}
@@ -77,20 +75,13 @@ func init() {
 		false,
 		"No systemd daemon reloading after installing. Usefull for controlling when to reload the deamon",
 	)
-	installCmd.Flags().BoolVarP(
-		&enable,
-		"enable",
-		"",
-		false,
-		"Immediatly enable and load the service into systemd",
-	)
 
 }
 
-func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
+func downloadDirectory(repoURL, quadletName, downloadPath string) error {
 	log.Info("cloning repo")
 	// Clone the repository
-	_, err := git.PlainClone(destinationPath, false, &git.CloneOptions{
+	_, err := git.PlainClone(downloadPath, false, &git.CloneOptions{
 		Depth: 1,
 		URL:   repoURL,
 	})
@@ -98,68 +89,94 @@ func downloadDirectory(repoURL, directoryPath, destinationPath string) error {
 		return fmt.Errorf("failed to clone repository: %v", err)
 	}
 
-	filesWritten := false
-	filepath.Walk(filepath.Join(destinationPath, directoryPath),
-		func(path string, info fs.FileInfo, err error) error {
-			log.Debugf("walking the directory %v. workfing on file %v\n", path, info.Name())
-			switch ext := filepath.Ext(info.Name()); ext {
-			//TODO need to copy folder strucure if exists. Like if there's a/foo.yaml
-			// which the foo.kube points at in Yaml=a/foo.yaml
-			case ".container", ".kube", ".volume", ".network", ".image", ".yaml":
-				log.Debugf("handling file %s\n", ext)
+	err = copyDir(filepath.Join(downloadPath, quadletName), filepath.Join(installDir, quadletName))
+	if err != nil {
+		log.Error("Error copying the directory %v\n", err)
+		return err
+	}
+	reloadDaemon(quadletName)
+	return nil
+}
 
-				configDir, err := os.UserConfigDir()
-				if err != nil {
-					log.Error("failed reading user config dir")
-					log.Fatal(err)
-				}
-				dest := filepath.Join(configDir, "containers", "systemd")
+// copyFile copies a single file from src to dst
+func copyFile(src, dst string) error {
+	log.Infof("copying file from %v to %v\n", src, dst)
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
 
-				bytesRead, err := os.ReadFile(path)
-				if err != nil {
-					log.Error("failed reading file ")
-					log.Fatal(err)
-				}
+	destinationFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer destinationFile.Close()
 
-				err = os.WriteFile(filepath.Join(dest, info.Name()), bytesRead, 0644)
-				if err != nil {
-					log.Fatal(err)
-				}
-				filesWritten = true
-			default:
-				log.Debug("ignoring %v...\n", ext)
-			}
-			return nil
-		})
-	if filesWritten {
-		log.Debug("Finisihed writing files")
-		if !noSystemdDaemonReload {
-			log.Info("Reloading systemd daemon for the current user")
-			cmd := exec.Command("systemctl", "daemon-reload", "--user")
-			out, err := cmd.Output()
-			if err != nil {
-				log.Error("Failed reloading systemctl daemon-reload")
-				return err
-			}
-			log.Debug(out)
-			if enable {
-				log.Info("Enabling the service for the current user")
-				cmd := exec.Command("systemctl", "enable", "--user", directoryPath+".service")
-				out, err := cmd.Output()
-				if err != nil {
-					log.Errorf("Failed enabling systemd service %v", cmd.Err)
-					return err
-				}
-				log.Debug(out)
-			}
-			log.Infof("To immediatly start using the installed service run:\n"+
-				"\tsystemctl enable --now --user %s.service\n"+
-				"Alternatively pass --enable to the install command\n",
-				directoryPath)
-		}
-	} else {
-		log.Info("Finished without writing files")
+	_, err = io.Copy(destinationFile, sourceFile)
+	if err != nil {
+		return err
 	}
 
+	return destinationFile.Sync()
+}
+
+// copyDir recursively copies a directory from src to dst
+func copyDir(src string, dst string) error {
+	// Get properties of the source directory
+	log.Infof("copying from %v to %v\n", src, dst)
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	// Create the destination directory
+	err = os.MkdirAll(dst, srcInfo.Mode())
+	if err != nil {
+		return err
+	}
+
+	// Read all the entries in the source directory
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	// Loop through all the entries
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+
+		// If it's a directory, recurse
+		if entry.IsDir() {
+			err = copyDir(srcPath, dstPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Otherwise, copy the file
+			err = copyFile(srcPath, dstPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func reloadDaemon(serviceName string) error {
+	if !noSystemdDaemonReload {
+		log.Info("Reloading systemd daemon for the current user")
+		cmd := exec.Command("systemctl", "daemon-reload", "--user")
+		out, err := cmd.Output()
+		if err != nil {
+			log.Error("Failed reloading systemctl daemon-reload")
+			return err
+		}
+		log.Debug(out)
+		log.Infof("To immediatly start using the installed service run:\n"+
+			"\tsystemctl start --user %s.service\n", serviceName)
+	}
 	return nil
 }
