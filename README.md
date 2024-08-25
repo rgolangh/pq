@@ -2,9 +2,15 @@
 
 NOTE: UNDER DEVELOPMENT
 
-```
+See how quadlets are stored in a git repository https://github.com/rgolangh/podman-quadlets.
+
+This git repo is used by default. Override with `--repo https://my/git/repo`
+
+## Usage
+
+```bash
 $ pq list
-Listing quadlets from repo https://rgolangh/podman-quadlets (default in ~/.config/pq/pq.yaml)
+Listing quadlets from repo https://github.com/rgolangh/podman-quadlets (default in ~/.config/pq/pq.yaml)
 
 - kind
 - wordpress
