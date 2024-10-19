@@ -12,25 +12,26 @@ This git repo is used by default. Override with `--repo https://my/git/repo`
 $ pq list
 Listing quadlets from repo https://github.com/rgolangh/podman-quadlets (default in ~/.config/pq/pq.yaml)
 
-- kind
-- wordpress
 - nginx
+- redpanda
+- wordpress
 
-$ pq install kind
-Installing quadlet 'kind'
+$ pq install wordpress
+Installing quadlet 'wordpress'
 [#############             ]
 
-$ pq install kind --systemd-reload
-Installing quadlet 'kind'
+$ pq install wordpress --systemd-reload
+Installing quadlet 'wordpress'
 [#############             ]
 
-$ pq install kind --repo https://github.com/rgolangh/podman-quadlets
-Installing quadlet 'kind' from https://github.com/rgolangh/podman-quadlets
+$ pq install wordpress --repo https://github.com/rgolangh/podman-quadlets
+Installing quadlet 'wordpress' from https://github.com/rgolangh/podman-quadlets
 [#############             ]
 
 $ pq list --installed
-- kind (on 24/01/2024)
+- wordpress (on 24/01/2024)
 
-$ pq remove kind
+$ pq remove wordpress
 ```
+
 

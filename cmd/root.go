@@ -19,7 +19,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sirupsen/logrus"
+	"github.com/Masterminds/log-go"
+	"github.com/Masterminds/log-go/impl/cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,7 +28,6 @@ import (
 var (
 	cfgFile string
 	verbose bool
-	log     *logrus.Logger
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -43,7 +43,7 @@ to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
-	PersistentPreRun: setLogging,
+	PersistentPreRun: setupLogging,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -68,17 +68,6 @@ func init() {
 
 }
 
-func setLogging(cmd *cobra.Command, args []string) {
-	log = logrus.New()
-	log.Formatter = new(logrus.TextFormatter) //default
-	log.Formatter.(*logrus.TextFormatter).DisableLevelTruncation = true
-	log.Formatter.(*logrus.TextFormatter).DisableTimestamp = true // remove timestamp from test output
-	if verbose {
-		log.Level = logrus.TraceLevel
-	}
-	log.Out = os.Stdout
-}
-
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	if cfgFile != "" {
@@ -101,4 +90,12 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+func setupLogging(cmd *cobra.Command, args []string) {
+    cliLogger := cli.NewStandard()
+    if verbose{
+        cliLogger.Level = log.TraceLevel
+    }
+    log.Current = cliLogger
 }

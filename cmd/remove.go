@@ -17,11 +17,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
-)
 
-var ()
+	"github.com/Masterminds/log-go"
+	"github.com/rgolangh/pq/pkg/systemd"
+	"github.com/spf13/cobra"
+)
 
 // installCmd represents the install command
 var removeCmd = &cobra.Command{
@@ -31,10 +32,12 @@ var removeCmd = &cobra.Command{
 	Aliases: []string{"uninstall", "rm"},
 	Args:    cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		log.Debug("remove called")
+		log.Debugf("remove called with args %v", args)
 		name := args[0]
 		quadlets := listInstalled()
+		log.Debugf("installed quadlets %v", quadlets)
 		for _, q := range quadlets {
+			log.Debugf("installed quadlet name %s", q.name)
 			if name == q.name {
 				// FIX protect from symlink or going out of the installed dir
 				var confirm string
@@ -43,7 +46,9 @@ var removeCmd = &cobra.Command{
 				if confirm == "y" {
 					os.RemoveAll(q.path)
 					log.Infof("removed %s from path %s\n", q.name, q.path)
+					systemd.DaemonReload()
 				}
+				break
 			}
 		}
 		return nil

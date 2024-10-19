@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Masterminds/log-go"
 	"github.com/spf13/cobra"
 	"gopkg.in/src-d/go-git.v4"
 )
@@ -47,6 +48,7 @@ var listCmd = &cobra.Command{
 			return nil
 		}
 		log.Info("Listing quardlets from ", repoURL)
+		log.Info("")
 		log.Debug("cloning repo ", repoURL)
 		workDir, err := os.MkdirTemp("", "pq")
 		if err != nil {
@@ -116,21 +118,22 @@ func init() {
 func listInstalled() []quadlet {
 	installed := []quadlet{}
 	log.Debugf("about to walk the install dir %s\n", installDir)
-	filepath.Walk(installDir,
-		func(path string, fileInfo fs.FileInfo, err error) error {
-			if fileInfo.IsDir() {
-				entries, err := os.ReadDir(path)
-				if err != nil {
-					return err
-				}
-				for _, e := range entries {
-					// check if there is an X.container named after the parent directory X
-					if !e.IsDir() && e.Name() == fileInfo.Name()+".container" {
-						installed = append(installed, quadlet{name: fileInfo.Name(), path: path})
-					}
-				}
+	rootWasWalked := false
+	filepath.WalkDir(
+		installDir,
+		func(path string, dirEntry fs.DirEntry, err error) error {
+			if !rootWasWalked {
+				rootWasWalked = true
+				return nil
 			}
-			log.Debugf("walking the directory %v. workfing on file %v\n", path, fileInfo.Name())
+			log.Debugf("dirEntry %v\n", dirEntry.Name())
+			entries, err := os.ReadDir(path)
+			if err != nil {
+				return err
+			}
+			if len(entries) > 0 {
+				installed = append(installed, quadlet{name: dirEntry.Name(), path: path})
+			}
 			return nil
 		})
 	return installed

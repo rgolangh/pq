@@ -19,9 +19,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 
+	"github.com/Masterminds/log-go"
+	"github.com/rgolangh/pq/pkg/systemd"
 	"github.com/spf13/cobra"
 	"gopkg.in/src-d/go-git.v4"
 )
@@ -91,10 +92,12 @@ func downloadDirectory(repoURL, quadletName, downloadPath string) error {
 
 	err = copyDir(filepath.Join(downloadPath, quadletName), filepath.Join(installDir, quadletName))
 	if err != nil {
-		log.Error("Error copying the directory %v\n", err)
+		log.Errorf("Error copying the directory %v\n", err)
 		return err
 	}
-	reloadDaemon(quadletName)
+	if !noSystemdDaemonReload {
+		systemd.DaemonReload()
+	}
 	return nil
 }
 
@@ -162,21 +165,5 @@ func copyDir(src string, dst string) error {
 		}
 	}
 
-	return nil
-}
-
-func reloadDaemon(serviceName string) error {
-	if !noSystemdDaemonReload {
-		log.Info("Reloading systemd daemon for the current user")
-		cmd := exec.Command("systemctl", "daemon-reload", "--user")
-		out, err := cmd.Output()
-		if err != nil {
-			log.Error("Failed reloading systemctl daemon-reload")
-			return err
-		}
-		log.Debug(out)
-		log.Infof("To immediatly start using the installed service run:\n"+
-			"\tsystemctl start --user %s.service\n", serviceName)
-	}
 	return nil
 }
