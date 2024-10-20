@@ -44,13 +44,14 @@ All quadlet repos should have a directory structure where every quadlet is a top
 .service , .network files are inside.`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		log.Debugf("install called with args %v\n", args)
+		log.Debugf("install called with args %v", args)
 		quadletName := args[0]
 
 		tmpDir, err := os.MkdirTemp("", "pq")
 		if err != nil {
 			return err
 		}
+		log.Infof("Installing quadlet %q", quadletName)
 		log.Debug("tmp dir name " + tmpDir)
 		err = downloadDirectory(repoURL, quadletName, tmpDir)
 		if err != nil {
@@ -80,7 +81,7 @@ func init() {
 }
 
 func downloadDirectory(repoURL, quadletName, downloadPath string) error {
-	log.Info("cloning repo")
+	log.Debug("cloning repo")
 	// Clone the repository
 	_, err := git.PlainClone(downloadPath, false, &git.CloneOptions{
 		Depth: 1,
@@ -127,7 +128,7 @@ func copyFile(src, dst string) error {
 // copyDir recursively copies a directory from src to dst
 func copyDir(src string, dst string) error {
 	// Get properties of the source directory
-	log.Infof("copying from %v to %v\n", src, dst)
+	log.Debugf("copying from %v to %v\n", src, dst)
 	srcInfo, err := os.Stat(src)
 	if err != nil {
 		return err
