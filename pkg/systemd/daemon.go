@@ -24,6 +24,18 @@ func DaemonReload() error {
 	return nil
 }
 
+func Status(serviceName string) error {
+	log.Infof("Status for service %s for current user", serviceName)
+	cmd := exec.Command("systemctl", "status", "--user", serviceName)
+	out, err := cmd.Output()
+	if err != nil {
+		log.Errorf("Failed to start service %s with error: %v", serviceName, err)
+		return err
+	}
+	log.Debug(out)
+    
+	return nil
+}
 func Start(serviceName string) error {
 	log.Infof("Starting service %s for current user", serviceName)
 	cmd := exec.Command("systemctl", "start", "--user", serviceName)

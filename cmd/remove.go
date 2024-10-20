@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/Masterminds/log-go"
+	"github.com/rgolangh/pq/pkg/quadlet"
 	"github.com/rgolangh/pq/pkg/systemd"
 	"github.com/spf13/cobra"
 )
@@ -34,21 +35,21 @@ var removeCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		log.Debugf("remove called with args %v", args)
 		name := args[0]
-		quadlets := listInstalled()
+		quadlets := quadlet.ListInstalled()
 		log.Debugf("installed quadlets %v", quadlets)
 		for _, q := range quadlets {
-			log.Debugf("installed quadlet name %q", q.name)
-			if name == q.name {
+			log.Debugf("installed quadlet name %q", q.Name)
+			if name == q.Name {
 				// FIX protect from symlink or going out of the installed dir
 				var confirm string
-				fmt.Printf("Remove quadlet %q from path %s?[y/n]", q.name, q.path)
+				fmt.Printf("Remove quadlet %q from path %s?[y/n]", q.Name, q.Path)
 				fmt.Scanln(&confirm)
 				if confirm == "y" {
-					os.RemoveAll(q.path)
-					log.Infof("removed %q from path %s\n", q.name, q.path)
+					os.RemoveAll(q.Path)
+					log.Infof("removed %q from path %s\n", q.Name, q.Path)
 					systemd.DaemonReload()
 				}
-		        return nil
+				return nil
 			}
 		}
 		return nil

@@ -23,16 +23,10 @@ import (
 	"strings"
 
 	"github.com/Masterminds/log-go"
+	"github.com/rgolangh/pq/pkg/quadlet"
 	"github.com/spf13/cobra"
 	"gopkg.in/src-d/go-git.v4"
 )
-
-var installDir string
-
-type quadlet struct {
-	name string
-	path string
-}
 
 // listCmd represents the list command
 var listCmd = &cobra.Command{
@@ -41,9 +35,9 @@ var listCmd = &cobra.Command{
 	Long:  `List the available quadlets.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if installed {
-			quadlets := listInstalled()
+			quadlets := quadlet.ListInstalled()
 			for _, q := range quadlets {
-				log.Infof(" - %v\n", q.name)
+				log.Infof(" - %v\n", q.Name)
 			}
 			return nil
 		}
@@ -105,36 +99,4 @@ func init() {
 		"installed",
 		false,
 		"list only the installed quadlets")
-
-	configDir, err := os.UserConfigDir()
-
-	if err != nil {
-		log.Error("failed reading user config dir")
-		log.Fatal(err)
-	}
-	installDir = filepath.Join(configDir, "containers", "systemd")
-}
-
-func listInstalled() []quadlet {
-	installed := []quadlet{}
-	log.Debugf("about to walk the install dir %s\n", installDir)
-	rootWasWalked := false
-	filepath.WalkDir(
-		installDir,
-		func(path string, dirEntry fs.DirEntry, err error) error {
-			if !rootWasWalked {
-				rootWasWalked = true
-				return nil
-			}
-			log.Debugf("dirEntry %v\n", dirEntry.Name())
-			entries, err := os.ReadDir(path)
-			if err != nil {
-				return err
-			}
-			if len(entries) > 0 {
-				installed = append(installed, quadlet{name: dirEntry.Name(), path: path})
-			}
-			return nil
-		})
-	return installed
 }

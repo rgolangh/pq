@@ -20,7 +20,7 @@ $ pq install wordpress
 Installing quadlet 'wordpress'
 [#############             ]
 
-$ pq install wordpress --systemd-reload
+$ pq install wordpress --no-systemd-daemon-reload
 Installing quadlet 'wordpress'
 [#############             ]
 

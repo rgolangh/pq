@@ -31,6 +31,7 @@ var (
 	repoURL               string
 	installed             bool
 	noSystemdDaemonReload bool
+    installDir string
 )
 
 // installCmd represents the install command
@@ -77,6 +78,13 @@ func init() {
 		false,
 		"No systemd daemon reloading after installing. Usefull for controlling when to reload the deamon",
 	)
+
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		panic(err)
+	}
+	installDir = filepath.Join(configDir, "containers", "systemd")
+
 
 }
 
