@@ -37,18 +37,18 @@ var removeCmd = &cobra.Command{
 		quadlets := listInstalled()
 		log.Debugf("installed quadlets %v", quadlets)
 		for _, q := range quadlets {
-			log.Debugf("installed quadlet name %s", q.name)
+			log.Debugf("installed quadlet name %q", q.name)
 			if name == q.name {
 				// FIX protect from symlink or going out of the installed dir
 				var confirm string
-				fmt.Printf("Remove quadlet %s from path %s?[y/n]", q.name, q.path)
+				fmt.Printf("Remove quadlet %q from path %s?[y/n]", q.name, q.path)
 				fmt.Scanln(&confirm)
 				if confirm == "y" {
 					os.RemoveAll(q.path)
-					log.Infof("removed %s from path %s\n", q.name, q.path)
+					log.Infof("removed %q from path %s\n", q.name, q.path)
 					systemd.DaemonReload()
 				}
-				break
+		        return nil
 			}
 		}
 		return nil
