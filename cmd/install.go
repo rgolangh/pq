@@ -103,7 +103,7 @@ func downloadDirectory(repoURL, quadletName, downloadPath string) error {
 
 // copyFile copies a single file from src to dst
 func copyFile(src, dst string) error {
-	log.Infof("copying file from %v to %v\n", src, dst)
+	log.Debugf("copying file from %v to %v", src, dst)
 	sourceFile, err := os.Open(src)
 	if err != nil {
 		return err

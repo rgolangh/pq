@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"os/exec"
 
-    "github.com/Masterminds/log-go"
+	"github.com/Masterminds/log-go"
 )
-
 
 func DaemonReload() error {
 	var confirm string
-	fmt.Printf("Reload systemd daemon?[y/n]")
+	fmt.Printf("Reload systemd daemon?[y/N]")
 	fmt.Scanln(&confirm)
 	if confirm == "y" {
 		log.Info("Reloading systemd daemon for the current user")
@@ -26,13 +25,25 @@ func DaemonReload() error {
 }
 
 func Start(serviceName string) error {
-	log.Infof("Starting service %s current user", serviceName)
+	log.Infof("Starting service %s for current user", serviceName)
 	cmd := exec.Command("systemctl", "start", "--user", serviceName)
 	out, err := cmd.Output()
 	if err != nil {
 		log.Errorf("Failed to start service %s with error: %v", serviceName, err)
-        return err
+		return err
 	}
 	log.Debug(out)
-    return nil
+	return nil
+}
+
+func Stop(serviceName string) error {
+	log.Infof("Stopping service %s for current user", serviceName)
+	cmd := exec.Command("systemctl", "stop", "--user", serviceName)
+	out, err := cmd.Output()
+	if err != nil {
+		log.Errorf("Failed to stop service %s with error: %v", serviceName, err)
+		return err
+	}
+	log.Debug(out)
+	return nil
 }
