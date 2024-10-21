@@ -54,7 +54,7 @@ func Status(serviceName string) (UnitStatus, error) {
 	if err := iniFile.Section("").MapTo(&us); err != nil {
 		return UnitStatus{}, err
 	}
-    log.Debug("status was successfull", us)
+	log.Debug("status was successfull", us)
 	return us, nil
 }
 func Start(serviceName string) error {

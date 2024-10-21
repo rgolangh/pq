@@ -31,7 +31,7 @@ var (
 	repoURL               string
 	installed             bool
 	noSystemdDaemonReload bool
-    installDir string
+	installDir            string
 )
 
 // installCmd represents the install command
@@ -84,7 +84,6 @@ func init() {
 		panic(err)
 	}
 	installDir = filepath.Join(configDir, "containers", "systemd")
-
 
 }
 

@@ -34,10 +34,10 @@ var listServicesCmd = &cobra.Command{
 		for _, s := range services {
 			if strings.HasSuffix(s.FileName, ".container") {
 				svc := strings.Replace(filepath.Base(s.FileName), ".container", ".service", 1)
-                unitStatus, err := systemd.Status(svc)
-                if err != nil {
-                    return err
-                }
+				unitStatus, err := systemd.Status(svc)
+				if err != nil {
+					return err
+				}
 				log.Infof(" - %s %s (%s)", svc, unitStatus.ActiveState, unitStatus.SubState)
 			}
 		}

@@ -93,9 +93,9 @@ func initConfig() {
 }
 
 func setupLogging(cmd *cobra.Command, args []string) {
-    cliLogger := cli.NewStandard()
-    if verbose{
-        cliLogger.Level = log.TraceLevel
-    }
-    log.Current = cliLogger
+	cliLogger := cli.NewStandard()
+	if verbose {
+		cliLogger.Level = log.TraceLevel
+	}
+	log.Current = cliLogger
 }
