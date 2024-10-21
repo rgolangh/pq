@@ -119,7 +119,7 @@ func ListInstalled() []Quadlet {
 			}
 			log.Debugf("dirEntry %v\n", dirEntry.Name())
 			entries, err := os.ReadDir(path)
-			if err != nil {
+			if err != nil && dirEntry.IsDir() {
 				return err
 			}
 			if len(entries) > 0 {

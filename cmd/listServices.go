@@ -21,6 +21,7 @@ import (
 
 	"github.com/Masterminds/log-go"
 	"github.com/rgolangh/pq/pkg/quadlet"
+	"github.com/rgolangh/pq/pkg/systemd"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +34,11 @@ var listServicesCmd = &cobra.Command{
 		for _, s := range services {
 			if strings.HasSuffix(s.FileName, ".container") {
 				svc := strings.Replace(filepath.Base(s.FileName), ".container", ".service", 1)
-				log.Infof(" - %s", svc)
+                unitStatus, err := systemd.Status(svc)
+                if err != nil {
+                    return err
+                }
+				log.Infof(" - %s %s (%s)", svc, unitStatus.ActiveState, unitStatus.SubState)
 			}
 		}
 		return nil

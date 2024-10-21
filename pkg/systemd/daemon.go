@@ -5,7 +5,18 @@ import (
 	"os/exec"
 
 	"github.com/Masterminds/log-go"
+	"gopkg.in/ini.v1"
 )
+
+type UnitStatus struct {
+	ActiveState   string `ini:"ActiveState"`
+	LoadState     string `ini:"LoadState"`
+	SubState      string `ini:"SubState"`
+	ExecMainPID   int    `ini:"ExecMainPID"`
+	Description   string `ini:"Description"`
+	MainPID       int    `ini:"MainPID"`
+	ExecMainStart string `ini:"ExecMainStartTimestamp"`
+}
 
 func DaemonReload() error {
 	var confirm string
@@ -24,17 +35,27 @@ func DaemonReload() error {
 	return nil
 }
 
-func Status(serviceName string) error {
+func Status(serviceName string) (UnitStatus, error) {
 	log.Infof("Status for service %s for current user", serviceName)
-	cmd := exec.Command("systemctl", "status", "--user", serviceName)
+	cmd := exec.Command("systemctl", "show", "--user", serviceName, "--no-page", "--property=ActiveState,SubState,LoadState,ExecMainPID,MainPID,ExecMainStartTimestamp,Description")
 	out, err := cmd.Output()
 	if err != nil {
-		log.Errorf("Failed to start service %s with error: %v", serviceName, err)
-		return err
+		log.Errorf("Failed to get the status service %s with error: %v", serviceName, err)
+		return UnitStatus{}, err
 	}
-	log.Debug(out)
-    
-	return nil
+	log.Debugf("status output %s", out)
+
+	iniFile, err := ini.Load(out)
+	if err != nil {
+		return UnitStatus{}, err
+	}
+
+	us := UnitStatus{}
+	if err := iniFile.Section("").MapTo(&us); err != nil {
+		return UnitStatus{}, err
+	}
+    log.Debug("status was successfull", us)
+	return us, nil
 }
 func Start(serviceName string) error {
 	log.Infof("Starting service %s for current user", serviceName)
