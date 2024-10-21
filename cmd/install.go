@@ -20,8 +20,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Masterminds/log-go"
+	"github.com/rgolangh/pq/pkg/quadlet"
 	"github.com/rgolangh/pq/pkg/systemd"
 	"github.com/spf13/cobra"
 	"gopkg.in/src-d/go-git.v4"
@@ -59,6 +61,23 @@ All quadlet repos should have a directory structure where every quadlet is a top
 			return err
 		}
 
+		if !noSystemdDaemonReload {
+			systemd.DaemonReload()
+		}
+
+		quadletsByName := quadlet.ListQuadlets()
+		if q, ok := quadletsByName[quadletName]; ok {
+			for _, f := range q.Files {
+				if filepath.Ext(f.FileName) == ".container" {
+					err := systemd.Start(strings.Replace(filepath.Base(f.FileName), ".container", ".service", 1))
+					if err != nil {
+						return err
+					}
+
+				}
+
+			}
+		}
 		return nil
 	},
 }
@@ -103,9 +122,7 @@ func downloadDirectory(repoURL, quadletName, downloadPath string) error {
 		log.Errorf("Error copying the directory %v\n", err)
 		return err
 	}
-	if !noSystemdDaemonReload {
-		systemd.DaemonReload()
-	}
+
 	return nil
 }
 

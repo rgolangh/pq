@@ -35,13 +35,13 @@ var listCmd = &cobra.Command{
 	Long:  `List the available quadlets.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if installed {
-			quadlets := quadlet.ListInstalled()
-			for _, q := range quadlets {
-				log.Infof(" - %v\n", q.Name)
+			quadlets := quadlet.ListQuadlets()
+			for _, quadlet := range quadlets {
+				log.Infof("- %v\n", quadlet.Name)
 			}
 			return nil
 		}
-		log.Info("Listing quardlets from ", repoURL)
+		log.Info("Listing quadlets from ", repoURL)
 		log.Info("")
 		log.Debug("cloning repo ", repoURL)
 		workDir, err := os.MkdirTemp("", "pq")

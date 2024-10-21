@@ -13,8 +13,9 @@ import (
 var installDir string
 
 type Quadlet struct {
-	Name string
-	Path string
+	Name  string
+	Path  string
+	Files []QuadletFile
 }
 type QuadletFile struct {
 	Unit      Unit      `ini:"Unit"`
@@ -52,13 +53,11 @@ func init() {
 	installDir = filepath.Join(configDir, "containers", "systemd")
 }
 
-func ListQuadletFiles() []QuadletFile {
-	// list files in quadlet folder
-
-	// extract unit names
-
-	quadletFiles := []QuadletFile{}
+// ListQuadlets list all quadlet files from the default quadlet dir
+// returns a map of quadle name to quadlet files
+func ListQuadlets() map[string]Quadlet {
 	log.Debugf("about to walk the install dir %s\n", installDir)
+	quadletsByName := make(map[string]Quadlet)
 	rootWasWalked := false
 	filepath.WalkDir(
 		installDir,
@@ -74,22 +73,40 @@ func ListQuadletFiles() []QuadletFile {
 					log.Errorf("failed to read dir %v", err)
 					return err
 				}
+				quadlet := Quadlet{
+					Name:  dirEntry.Name(),
+					Path:  path,
+					Files: []QuadletFile{},
+				}
 				for _, de := range entries {
-					log.Debugf("quadlet file %s", de.Name())
-					if strings.HasSuffix(de.Name(), ".container") && !de.IsDir() {
-						log.Debugf("found container file %s", de.Name())
+					if !de.IsDir() {
+						log.Debugf("quadlet file %s", de.Name())
+						i := strings.LastIndex(de.Name(), ".")
+						switch de.Name()[i:] {
+						case "container", "pod", "kube":
+							log.Debug("container file")
+						case "volume":
+							log.Debug("container file")
+						case "network":
+							log.Debug("network file")
+						default:
+							log.Debug("some other file")
+						}
+
 						qf, err := newQuadletFile(path, de)
 						if err != nil {
 							return err
 						}
-						quadletFiles = append(quadletFiles, qf)
+						log.Debugf("converted quadlet file %+v", qf)
+						quadlet.Files = append(quadlet.Files, qf)
 					}
 				}
+				quadletsByName[dirEntry.Name()] = quadlet
 			}
 			return nil
 		},
 	)
-	return quadletFiles
+	return quadletsByName
 }
 
 func newQuadletFile(path string, de fs.DirEntry) (QuadletFile, error) {
@@ -101,31 +118,7 @@ func newQuadletFile(path string, de fs.DirEntry) (QuadletFile, error) {
 	qf := QuadletFile{}
 	iniFile.MapTo(&qf)
 	qf.FileName = filepath.Join(path, de.Name())
-	log.Debugf("container file %+v", qf)
+	log.Debugf("quadlet file %+v", qf)
 	return qf, nil
 
-}
-
-func ListInstalled() []Quadlet {
-	installed := []Quadlet{}
-	log.Debugf("about to walk the install dir %s\n", installDir)
-	rootWasWalked := false
-	filepath.WalkDir(
-		installDir,
-		func(path string, dirEntry fs.DirEntry, err error) error {
-			if !rootWasWalked {
-				rootWasWalked = true
-				return nil
-			}
-			log.Debugf("dirEntry %v\n", dirEntry.Name())
-			entries, err := os.ReadDir(path)
-			if err != nil && dirEntry.IsDir() {
-				return err
-			}
-			if len(entries) > 0 {
-				installed = append(installed, Quadlet{Name: dirEntry.Name(), Path: path})
-			}
-			return nil
-		})
-	return installed
 }

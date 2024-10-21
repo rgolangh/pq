@@ -18,6 +18,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/Masterminds/log-go"
 	"github.com/rgolangh/pq/pkg/quadlet"
@@ -35,23 +37,25 @@ var removeCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		log.Debugf("remove called with args %v", args)
 		name := args[0]
-		quadlets := quadlet.ListInstalled()
-		log.Debugf("installed quadlets %v", quadlets)
-		for _, q := range quadlets {
-			log.Debugf("installed quadlet name %q", q.Name)
-			if name == q.Name {
-				// FIX protect from symlink or going out of the installed dir
-				var confirm string
-				fmt.Printf("Remove quadlet %q from path %s?[y/n]", q.Name, q.Path)
-				fmt.Scanln(&confirm)
-				if confirm == "y" {
-					os.RemoveAll(q.Path)
-					log.Infof("removed %q from path %s\n", q.Name, q.Path)
-					systemd.DaemonReload()
+		quadletsByName := quadlet.ListQuadlets()
+		log.Debugf("installed quadlets %v", quadletsByName)
+		if quadlet, ok := quadletsByName[name]; ok && len(quadlet.Files) > 0 {
+			log.Debugf("quadlet files %v", quadlet.Files)
+			var confirm string
+			for _, svc := range quadlet.Files {
+				if filepath.Ext(svc.FileName) == ".container" {
+					systemd.Stop(strings.Replace(filepath.Base(svc.FileName), ".container", ".service", 1))
 				}
-				return nil
+			}
+			fmt.Printf("Remove quadlet %q from path %s?[y/n]", quadlet.Name, quadlet.Path)
+			fmt.Scanln(&confirm)
+			if confirm == "y" {
+				os.RemoveAll(quadlet.Path)
+				log.Infof("removed %q from path %s\n", quadlet.Name, quadlet.Path)
+				systemd.DaemonReload()
 			}
 		}
+
 		return nil
 	},
 }

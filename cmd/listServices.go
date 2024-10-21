@@ -28,17 +28,21 @@ import (
 // listCmd represents the list command
 var listServicesCmd = &cobra.Command{
 	Use:   "list-services",
-	Short: "List the istalled services from quadlets",
+	Short: "List the systemd services from installed quadlets",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		services := quadlet.ListQuadletFiles()
-		for _, s := range services {
-			if strings.HasSuffix(s.FileName, ".container") {
-				svc := strings.Replace(filepath.Base(s.FileName), ".container", ".service", 1)
-				unitStatus, err := systemd.Status(svc)
-				if err != nil {
-					return err
+		quadletsByName := quadlet.ListQuadlets()
+		log.Debugf("quadlets by name %+v", quadletsByName)
+		for _, quadlet := range quadletsByName {
+			for _, qf := range quadlet.Files {
+				if strings.HasSuffix(qf.FileName, ".container") {
+					// .container file is generated as .service file
+					svc := strings.Replace(filepath.Base(qf.FileName), ".container", ".service", 1)
+					unitStatus, err := systemd.Status(svc)
+					if err != nil {
+						return err
+					}
+					log.Infof("%s - %s %s (%s)", quadlet.Name, svc, unitStatus.ActiveState, unitStatus.SubState)
 				}
-				log.Infof("- %s %s (%s)", svc, unitStatus.ActiveState, unitStatus.SubState)
 			}
 		}
 		return nil
