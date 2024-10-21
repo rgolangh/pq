@@ -38,7 +38,7 @@ var listServicesCmd = &cobra.Command{
 				if err != nil {
 					return err
 				}
-				log.Infof(" - %s %s (%s)", svc, unitStatus.ActiveState, unitStatus.SubState)
+				log.Infof("- %s %s (%s)", svc, unitStatus.ActiveState, unitStatus.SubState)
 			}
 		}
 		return nil

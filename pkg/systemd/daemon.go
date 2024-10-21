@@ -36,7 +36,6 @@ func DaemonReload() error {
 }
 
 func Status(serviceName string) (UnitStatus, error) {
-	log.Infof("Status for service %s for current user", serviceName)
 	cmd := exec.Command("systemctl", "show", "--user", serviceName, "--no-page", "--property=ActiveState,SubState,LoadState,ExecMainPID,MainPID,ExecMainStartTimestamp,Description")
 	out, err := cmd.Output()
 	if err != nil {
