@@ -42,6 +42,11 @@ Remove quadlet "wordpress" from path /var/home/rgolan/.config/containers/systemd
 removed "wordpress" from path /var/home/rgolan/.config/containers/systemd/wordpress
 Reload systemd daemon?[y/N]y
 Reloading systemd daemon for the current user
+
+$ pq list-services
+nextcloud - nextcloud-aio-master.service active (running)
+redpanda - console.service inactive (dead)
+redpanda - redpanda.service inactive (dead)
 ```
 
 

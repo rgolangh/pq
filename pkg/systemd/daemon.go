@@ -8,14 +8,14 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+const RESET = "\033[0m"
+const Green = "\033[32m"
+
 type UnitStatus struct {
-	ActiveState   string `ini:"ActiveState"`
-	LoadState     string `ini:"LoadState"`
-	SubState      string `ini:"SubState"`
-	ExecMainPID   int    `ini:"ExecMainPID"`
-	Description   string `ini:"Description"`
-	MainPID       int    `ini:"MainPID"`
-	ExecMainStart string `ini:"ExecMainStartTimestamp"`
+	ActiveState string `ini:"ActiveState"`
+	LoadState   string `ini:"LoadState"`
+	SubState    string `ini:"SubState"`
+	Description string `ini:"Description"`
 }
 
 func DaemonReload() error {
@@ -36,7 +36,7 @@ func DaemonReload() error {
 }
 
 func Status(serviceName string) (UnitStatus, error) {
-	cmd := exec.Command("systemctl", "show", "--user", serviceName, "--no-page", "--property=ActiveState,SubState,LoadState,ExecMainPID,MainPID,ExecMainStartTimestamp,Description")
+	cmd := exec.Command("systemctl", "show", "--user", serviceName, "--no-page", "--property=ActiveState,SubState,LoadState,Description")
 	out, err := cmd.Output()
 	if err != nil {
 		log.Errorf("Failed to get the status service %s with error: %v", serviceName, err)
@@ -53,7 +53,7 @@ func Status(serviceName string) (UnitStatus, error) {
 	if err := iniFile.Section("").MapTo(&us); err != nil {
 		return UnitStatus{}, err
 	}
-	log.Debug("status was successfull", us)
+	log.Debug("status was successful", us)
 	return us, nil
 }
 func Start(serviceName string) error {

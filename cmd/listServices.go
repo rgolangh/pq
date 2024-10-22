@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -41,7 +42,16 @@ var listServicesCmd = &cobra.Command{
 					if err != nil {
 						return err
 					}
-					log.Infof("%s - %s %s (%s)", quadlet.Name, svc, unitStatus.ActiveState, unitStatus.SubState)
+					color := ""
+					if unitStatus.ActiveState == "active" {
+						color = systemd.Green
+					}
+					log.Infof("%s - %s %s (%s)",
+						quadlet.Name,
+						svc,
+						fmt.Sprintf("%s%s%s", color, unitStatus.ActiveState, systemd.RESET),
+						fmt.Sprintf("%s%s%s", color, unitStatus.SubState, systemd.RESET),
+					)
 				}
 			}
 		}
