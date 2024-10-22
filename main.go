@@ -15,7 +15,9 @@ limitations under the License.
 */
 package main
 
-import "github.com/rgolangh/pq/cmd"
+import (
+	"github.com/rgolangh/pq/cmd"
+)
 
 func main() {
 	cmd.Execute()
