@@ -1,4 +1,5 @@
 # .goreleaser.yaml
+version: 2
 builds:
   # You can have multiple builds defined as a yaml list
   - #
