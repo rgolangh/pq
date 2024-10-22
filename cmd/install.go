@@ -39,7 +39,7 @@ var (
 // installCmd represents the install command
 var installCmd = &cobra.Command{
 	Use:   "install",
-	Short: "install a quadlet from a quadlet repo",
+	Short: "Install a quadlet from a quadlet repo",
 	Long: `Donwload the quadlet folder by NAME and copy 
 it into the $HOME/.config/containers/systemd/
 Files which are not supported should be cleared from the directory
