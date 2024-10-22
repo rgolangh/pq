@@ -87,7 +87,8 @@ builds:
     # For more info refer to: https://go.dev/doc/install/source#environment
     #
     # Default: [ 'darwin', 'linux', 'windows' ].
-    #goos:
+    goos:
+      - linux
     #  - freebsd
     #  - windows
 
