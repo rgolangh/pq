@@ -23,9 +23,9 @@ builds:
     # Custom flags.
     #
     # Templates: allowed.
-    flags:
-      - -tags=dev
-      - -v
+    #flags:
+    #  - -tags=dev
+    #  - -v
 
     # Custom asmflags.
     #
@@ -57,7 +57,7 @@ builds:
     # - `c-shared`
     # - `c-archive`
     # - `pie`
-    buildmode: c-shared
+    #buildmode: c-shared
 
     # Custom build tags templates.
     #tags:
@@ -190,7 +190,7 @@ builds:
     #
     # Default: "go".
     # Templates: allowed.
-    gobinary: "go1.21"
+    #gobinary: "go1.23"
 
     # Sets the command to run to build.
     # Can be useful if you want to build tests, for example,
@@ -205,7 +205,7 @@ builds:
     # Pass an empty string to skip modifying the output.
     #
     # Templates: allowed.
-    mod_timestamp: "{{ .CommitTimestamp }}"
+    #mod_timestamp: "{{ .CommitTimestamp }}"
 
     # Hooks can be used to customize the final binary,
     # for example, to run generators.
@@ -219,7 +219,7 @@ builds:
     # Useful for library projects.
     #
     # Templates: allowed (since v2.3).
-    skip: false
+    #skip: false
 
     # By default, GoReleaser will create your binaries inside
     # `dist/${BuildID}_${BuildTarget}`, which is a unique directory per build
@@ -232,7 +232,7 @@ builds:
     # overriding each other.
     #
     # Templates: allowed (since v2.3).
-    no_unique_dist_dir: true
+    #no_unique_dist_dir: true
 
     # By default, GoReleaser will check if the main filepath has a main
     # function.
