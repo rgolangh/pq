@@ -1,14 +1,22 @@
 SHELL := /bin/bash
 
+# I try to make this makefile generic enough so other go project can just use
+# it as is. Any project specific info is extracted from the real projct assests,
+# like go.mod or git, so when a change is needed, it is changed in one place.
 GO_VERSION := $(shell awk '/^go / {print $$2}' go.mod)
+GO_MODULE := $(shell awk '/^module / {print $$2}' go.mod)
 GIT_VERSION := $(shell git describe --always --tags HEAD)
 GIT_COMMIT := $(shell git rev-parse HEAD)
 GIT_COMMIT_DATE := $(shell git log --pretty=%ct  -1)
 GIT_TREE_STATE := $(shell git diff --exit-code --quiet && echo clean || echo dirty)
+ldflags := -X $(GO_MODULE)/internal/version.Version=$(GIT_VERSION)
+ldflags += -X $(GO_MODULE)/internal/version.Commit=$(GIT_COMMIT)
+ldflags += -X $(GO_MODULE)/internal/version.CommitDate=$(GIT_COMMIT_DATE)
+ldflags += -X $(GO_MODULE)/internal/version.TreeState=$(GIT_TREE_STATE)
 
-# Print out only the variables declared in this makefile. Will be used
-# by other tools like github workflows or any other build tool.
-# note: the ldflags value is long with spaces and isn't a valid bash expression
+# Print out only the variables declared in this makefile(not any of the builtins).
+# Will be used by other tools like github workflows or any other build tool.
+# Note - the ldflags value is long with spaces and isn't a valid bash expression
 # unless it is quoted. I did't add quotes to the 'echo' section here because it
 # creates other problems when using valus in github action. So to source all
 # vars in one-shot just ignore ldflags with a grep or specifically surround it
@@ -28,10 +36,6 @@ fmt:
 vet:
 	go vet ./...
 
-ldflags := -X github.com/rgolangh/pq/internal/version.Version=$(GIT_VERSION)
-ldflags += -X github.com/rgolangh/pq/internal/version.Commit=$(GIT_COMMIT)
-ldflags += -X github.com/rgolangh/pq/internal/version.CommitDate=$(GIT_COMMIT_DATE)
-ldflags += -X github.com/rgolangh/pq/internal/version.TreeState=$(GIT_TREE_STATE)
 
 build: fmt vet
 	go build -v -o bin/ -ldflags="$(ldflags)" ./...
