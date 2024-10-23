@@ -3,8 +3,6 @@ name: goreleaser
 on:
   push:
     # run only against tags
-    branches:
-      - main
     tags:
       - "v*"
 
