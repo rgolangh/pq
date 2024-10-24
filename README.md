@@ -1,6 +1,7 @@
 # pq is a cli to help manage podman quadlets
 
-NOTE: UNDER DEVELOPMENT
+> [!NOTE]
+> Uner Development
 
 See how quadlets are stored in a git repository https://github.com/rgolangh/podman-quadlets.
 
