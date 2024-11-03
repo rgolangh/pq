@@ -39,7 +39,8 @@ install:
 	go install -ldflags="$(ldflags)" .
 
 fmt:
-	go fmt ./...
+	formatted="$(shell go fmt ./...)"
+	test -z "$$formatted"
 
 vet:
 	go vet ./...
