@@ -99,7 +99,7 @@ func outputQuadlet(repoURL, quadletName, downloadPath string, out io.Writer) err
 			if err != nil {
 				return err
 			}
-			fmt.Fprintf(out, "# %s\n", entry.Name())
+			fmt.Fprintf(out, "# Source: %s %s/%s\n", repoURL, quadletName, entry.Name())
 			fmt.Fprintln(out, string(f))
 		}
 	}
