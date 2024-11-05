@@ -40,7 +40,7 @@ var (
 var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install a quadlet from a quadlet repo",
-	Long: `Donwload the quadlet folder by NAME and copy 
+	Long: `Download the quadlet folder by NAME and copy
 it into the $HOME/.config/containers/systemd/
 Files which are not supported should be cleared from the directory
 All quadlet repos should have a directory structure where every quadlet is a top level directory and all the 
@@ -95,7 +95,7 @@ func init() {
 		"no-systemd-daemon-reload",
 		"",
 		false,
-		"No systemd daemon reloading after installing. Usefull for controlling when to reload the deamon",
+		"No systemd daemon reloading after installing. Useful for controlling when to reload the deamon",
 	)
 
 	configDir, err := os.UserConfigDir()
