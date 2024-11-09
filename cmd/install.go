@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -32,6 +33,7 @@ import (
 var (
 	repoURL               string
 	installed             bool
+	dryRun                bool
 	noSystemdDaemonReload bool
 	installDir            string
 )
@@ -91,13 +93,19 @@ func init() {
 		"https://github.com/rgolangh/podman-quadlets",
 		"The repo url (currently only git support), where the quadlets are stored")
 	installCmd.Flags().BoolVarP(
+		&dryRun,
+		"dry-run",
+		"",
+		false,
+		"Don't install, just output the generated quadlet for dubugging",
+	)
+	installCmd.Flags().BoolVarP(
 		&noSystemdDaemonReload,
 		"no-systemd-daemon-reload",
 		"",
 		false,
 		"No systemd daemon reloading after installing. Useful for controlling when to reload the deamon",
 	)
-
 	configDir, err := os.UserConfigDir()
 	if err != nil {
 		panic(err)
@@ -117,6 +125,19 @@ func downloadDirectory(repoURL, quadletName, downloadPath string) error {
 		return fmt.Errorf("failed to clone repository: %v", err)
 	}
 
+	if dryRun {
+		noSystemdDaemonReload = true
+		log.Debug("Install Dry Run")
+		cmd := exec.Command("/usr/lib/systemd/system-generators/podman-system-generator", "--user", "--dryrun")
+		cmd.Env = append(cmd.Env, "QUADLET_UNIT_DIRS="+filepath.Join(downloadPath, quadletName))
+		out, err := cmd.Output()
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		fmt.Fprint(os.Stdout, string(out))
+		return nil
+	}
 	err = copyDir(filepath.Join(downloadPath, quadletName), filepath.Join(installDir, quadletName))
 	if err != nil {
 		log.Errorf("Error copying the directory %v\n", err)
