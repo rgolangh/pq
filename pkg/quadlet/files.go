@@ -82,6 +82,9 @@ func ListQuadlets() map[string]Quadlet {
 					if !de.IsDir() {
 						log.Debugf("quadlet file %s", de.Name())
 						i := strings.LastIndex(de.Name(), ".")
+						if i < 0 {
+							continue
+						}
 						switch de.Name()[i:] {
 						case "container", "pod", "kube":
 							log.Debug("container file")
