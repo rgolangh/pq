@@ -9,6 +9,8 @@ This git repo is used by default. Override with `--repo https://my/git/repo`
 
 ## Usage
 
+<img src="pq.gif"/>
+
 ```console
 $ pq list
 Listing quadlets from repo https://github.com/rgolangh/podman-quadlets (default in ~/.config/pq/pq.yaml)
