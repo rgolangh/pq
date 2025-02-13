@@ -43,7 +43,7 @@ of the quadlet may cause (like port usages, volume mounts and so on).`,
 		if err != nil {
 			return err
 		}
-		log.Infof("Inspect quadlet %q", quadletName)
+		log.Infof("Inspect quadlet %q from repo %s", quadletName, repoURL)
 		log.Debug("tmp dir name " + tmpDir)
 		err = outputQuadlet(repoURL, quadletName, tmpDir, os.Stdout)
 		if err != nil {
@@ -65,6 +65,13 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// inspectCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	inspectCmd.Flags().StringVarP(
+		&repoURL,
+		"repo",
+		"r",
+		"https://github.com/rgolangh/podman-quadlets",
+		"The repo url (currently only git support), where the quadlets are stored")
+
 }
 
 func outputQuadlet(repoURL, quadletName, downloadPath string, out io.Writer) error {
