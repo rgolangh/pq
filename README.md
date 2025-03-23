@@ -3,11 +3,24 @@
 > [!NOTE]
 > Uner Development
 
+## installation
+
+To install `pq`, download the latest release from the [Releases page](https://github.com/rgolangh/pq/releases).
+Make the binary executable (if necessary), and move it to a directory in your system's PATH, so it can be executed from anywhere.
+
+**Example (Linux):**
+
+```bash
+curl -L -o - https://github.com/rgolangh/pq/releases/download/v0.0.4/pq_0.0.4_linux_amd64v3.tar.gz | tar -zxv
+# Move it to a directory in your PATH (e.g., /usr/local/bin)
+sudo mv pq /usr/local/bin/pq
+```
+
+## Usage
+
 See how quadlets are stored in a git repository https://github.com/rgolangh/podman-quadlets.
 
 This git repo is used by default. Override with `--repo https://my/git/repo`
-
-## Usage
 
 <img src="pq.gif"/>
 
