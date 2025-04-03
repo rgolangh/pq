@@ -3,7 +3,7 @@
 > [!NOTE]
 > Uner Development
 
-## installation
+## Installation
 
 To install `pq`, download the latest release from the [Releases page](https://github.com/rgolangh/pq/releases).
 Make the binary executable (if necessary), and move it to a directory in your system's PATH, so it can be executed from anywhere.
