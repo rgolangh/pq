@@ -85,7 +85,7 @@ func outputQuadlet(repoURL, quadletName, downloadPath string, out io.Writer) err
 		return fmt.Errorf("failed to clone repository: %v", err)
 	}
 
-	srcPath := filepath.Join(downloadPath, quadletName)
+	srcPath := filepath.Join(downloadPath, repoSubdir, quadletName)
 	log.Debugf("showing quadlet in path %s \n", srcPath)
 
 	// Read all the entries in the source directory

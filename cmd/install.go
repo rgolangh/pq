@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -58,7 +59,7 @@ All quadlet repos should have a directory structure where every quadlet is a top
 		}
 		log.Infof("Installing quadlet %q", quadletName)
 		log.Debug("tmp dir name " + tmpDir)
-		err = downloadDirectory(repoURL, quadletName, tmpDir)
+		err = downloadDirectory(repoURL, repoSubdir, quadletName, tmpDir)
 		if err != nil {
 			return err
 		}
@@ -116,7 +117,7 @@ func init() {
 
 }
 
-func downloadDirectory(repoURL, quadletName, downloadPath string) error {
+func downloadDirectory(repoURL, repoPath, quadletName, downloadPath string) error {
 	log.Debug("cloning repo")
 	// Clone the repository
 	_, err := git.PlainClone(downloadPath, false, &git.CloneOptions{
@@ -127,6 +128,7 @@ func downloadDirectory(repoURL, quadletName, downloadPath string) error {
 		return fmt.Errorf("failed to clone repository: %v", err)
 	}
 
+	downloadPath = path.Join(downloadPath, repoPath)
 	if dryRun {
 		noSystemdDaemonReload = true
 		log.Debug("Install Dry Run")
