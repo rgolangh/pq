@@ -79,3 +79,16 @@ func Stop(serviceName string) error {
 	log.Debug(out)
 	return nil
 }
+
+func Journal(serviceName string) error {
+	if serviceName == "" {
+		return fmt.Errorf("Unit name cannot be empty")
+	}
+	cmd := exec.Command("journalctl", "--user", "--unit", serviceName, "-p", "info", "--boot", "-n", "10", "--output", "cat")
+	out, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+	log.Error(string(out))
+	return nil
+}
