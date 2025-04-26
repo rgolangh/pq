@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -58,6 +59,8 @@ var listCmd = &cobra.Command{
 			return fmt.Errorf("failed to clone repository: %v", err)
 		}
 
+		workDir = path.Join(workDir, repoSubdir)
+		log.Debug("walk dir -------------- " + workDir)
 		filepath.Walk(workDir, func(path string, info fs.FileInfo, err error) error {
 			if info.IsDir() {
 				rel, err := filepath.Rel(workDir, path)

@@ -26,8 +26,9 @@ import (
 )
 
 var (
-	cfgFile string
-	verbose bool
+	cfgFile    string
+	verbose    bool
+	repoSubdir string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -61,6 +62,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pq.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	rootCmd.PersistentFlags().StringVarP(&repoSubdir, "repo-subdir", "s", "", "verbose output")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
