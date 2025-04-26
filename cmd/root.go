@@ -55,14 +55,9 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pq.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	rootCmd.PersistentFlags().StringVarP(&repoSubdir, "repo-subdir", "s", "", "verbose output")
+	rootCmd.PersistentFlags().StringVarP(&repoSubdir, "repo-subdir", "s", "", "sub-directory where quadlets are stored in a repository")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

@@ -59,13 +59,41 @@ All quadlet repos should have a directory structure where every quadlet is a top
 		}
 		log.Infof("Installing quadlet %q", quadletName)
 		log.Debug("tmp dir name " + tmpDir)
-		err = downloadDirectory(repoURL, repoSubdir, quadletName, tmpDir)
+		d, err := downloadDirectory(repoURL, repoSubdir, tmpDir)
 		if err != nil {
 			return err
 		}
 
+		if dryRun {
+			noSystemdDaemonReload = true
+			log.Debug("Install dry-run")
+			args := []string{"--dryrun"}
+			if systemd.UserFlag != "" {
+				args = append(args, systemd.UserFlag)
+			}
+			cmd := exec.Command("/usr/lib/systemd/system-generators/podman-system-generator", args...)
+			cmd.Env = append(cmd.Env, "QUADLET_UNIT_DIRS="+filepath.Join(d, quadletName))
+			if systemd.UserFlag != "" {
+				cmd.Args = append(cmd.Args, systemd.UserFlag)
+			}
+			out, err := cmd.CombinedOutput()
+			if err != nil {
+				return fmt.Errorf("podman-system-generator failed: %s %w", out, err)
+			}
+			fmt.Fprint(os.Stdout, string(out))
+			return nil
+		}
+		err = copyDir(filepath.Join(d, quadletName), filepath.Join(installDir, quadletName))
+		if err != nil {
+			log.Errorf("Error copying the directory %v\n", err)
+			return err
+		}
+
 		if !noSystemdDaemonReload {
-			systemd.DaemonReload()
+			err = systemd.DaemonReload()
+			if err != nil {
+				return err
+			}
 		}
 
 		quadletsByName := quadlet.ListQuadlets()
@@ -113,42 +141,23 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	installDir = filepath.Join(configDir, "containers", "systemd")
-
+	if os.Geteuid() == 0 {
+		installDir = filepath.Join("/etc", "containers", "systemd")
+	} else {
+		installDir = filepath.Join(configDir, "containers", "systemd")
+	}
 }
 
-func downloadDirectory(repoURL, repoPath, quadletName, downloadPath string) error {
+func downloadDirectory(repoURL, repoPath, downloadPath string) (string, error) {
 	log.Debug("cloning repo")
-	// Clone the repository
 	_, err := git.PlainClone(downloadPath, false, &git.CloneOptions{
 		Depth: 1,
 		URL:   repoURL,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to clone repository: %v", err)
+		return "", fmt.Errorf("failed to clone repository: %v", err)
 	}
-
-	downloadPath = path.Join(downloadPath, repoPath)
-	if dryRun {
-		noSystemdDaemonReload = true
-		log.Debug("Install Dry Run")
-		cmd := exec.Command("/usr/lib/systemd/system-generators/podman-system-generator", "--user", "--dryrun")
-		cmd.Env = append(cmd.Env, "QUADLET_UNIT_DIRS="+filepath.Join(downloadPath, quadletName))
-		out, err := cmd.Output()
-		if err != nil {
-			log.Error(err)
-			return err
-		}
-		fmt.Fprint(os.Stdout, string(out))
-		return nil
-	}
-	err = copyDir(filepath.Join(downloadPath, quadletName), filepath.Join(installDir, quadletName))
-	if err != nil {
-		log.Errorf("Error copying the directory %v\n", err)
-		return err
-	}
-
-	return nil
+	return path.Join(downloadPath, repoPath), nil
 }
 
 // copyFile copies a single file from src to dst

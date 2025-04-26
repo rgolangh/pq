@@ -2,14 +2,26 @@ package systemd
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 
 	"github.com/Masterminds/log-go"
 	"gopkg.in/ini.v1"
 )
 
-const RESET = "\033[0m"
-const Green = "\033[32m"
+const (
+	RESET = "\033[0m"
+	Green = "\033[32m"
+)
+
+var UserFlag string
+
+func init() {
+	if os.Getuid() != 0 {
+		UserFlag = "--user"
+	}
+
+}
 
 type UnitStatus struct {
 	ActiveState string `ini:"ActiveState"`
@@ -20,23 +32,29 @@ type UnitStatus struct {
 
 func DaemonReload() error {
 	var confirm string
-	fmt.Printf("Reload systemd daemon?[y/N]")
+	fmt.Printf("Reload systemd daemon? [y/N] ")
 	fmt.Scanln(&confirm)
 	if confirm == "y" {
-		log.Info("Reloading systemd daemon for the current user")
-		cmd := exec.Command("systemctl", "daemon-reload", "--user")
-		out, err := cmd.Output()
-		if err != nil {
-			log.Error("Failed reloading systemctl daemon-reload")
-			return err
+		log.Infof("Reloading systemd daemon for the current user(uid: %d)", os.Getuid())
+		args := []string{"daemon-reload"}
+		if UserFlag != "" {
+			args = append(args, UserFlag)
 		}
-		log.Debug(out)
+		cmd := exec.Command("systemctl", args...)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("%s %w", out, err)
+		}
 	}
 	return nil
 }
 
 func Status(serviceName string) (UnitStatus, error) {
-	cmd := exec.Command("systemctl", "show", "--user", serviceName, "--no-page", "--property=ActiveState,SubState,LoadState,Description")
+	args := []string{"show", serviceName, "--no-page", "--property=ActiveState,SubState,LoadState,Description"}
+	if UserFlag != "" {
+		args = append(args, UserFlag)
+	}
+	cmd := exec.Command("systemctl", args...)
 	out, err := cmd.Output()
 	if err != nil {
 		log.Errorf("Failed to get the status service %s with error: %v", serviceName, err)
@@ -56,13 +74,17 @@ func Status(serviceName string) (UnitStatus, error) {
 	log.Debug("status was successful", us)
 	return us, nil
 }
+
 func Start(serviceName string) error {
 	log.Infof("Starting service %s for current user", serviceName)
-	cmd := exec.Command("systemctl", "start", "--user", serviceName)
-	out, err := cmd.Output()
+	args := []string{"start", serviceName}
+	if UserFlag != "" {
+		args = append(args, UserFlag)
+	}
+	cmd := exec.Command("systemctl", args...)
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Errorf("Failed to start service %s with error: %v", serviceName, err)
-		return err
+		return fmt.Errorf("Failed to start service %s with error: %s %s", serviceName, err, out)
 	}
 	log.Debug(out)
 	return nil
@@ -70,7 +92,11 @@ func Start(serviceName string) error {
 
 func Stop(serviceName string) error {
 	log.Infof("Stopping service %s for current user", serviceName)
-	cmd := exec.Command("systemctl", "stop", "--user", serviceName)
+	args := []string{"stop", serviceName}
+	if UserFlag != "" {
+		args = append(args, UserFlag)
+	}
+	cmd := exec.Command("systemctl", args...)
 	out, err := cmd.Output()
 	if err != nil {
 		log.Errorf("Failed to stop service %s with error: %v", serviceName, err)
@@ -84,7 +110,11 @@ func Journal(serviceName string) error {
 	if serviceName == "" {
 		return fmt.Errorf("Unit name cannot be empty")
 	}
-	cmd := exec.Command("journalctl", "--user", "--unit", serviceName, "-p", "info", "--boot", "-n", "10", "--output", "cat")
+	args := []string{"--unit", serviceName, "-p", "info", "--boot", "-n", "10", "--output", "cat"}
+	if UserFlag != "" {
+		args = append(args, UserFlag)
+	}
+	cmd := exec.Command("journalctl", args...)
 	out, err := cmd.Output()
 	if err != nil {
 		return err

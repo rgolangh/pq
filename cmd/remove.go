@@ -47,7 +47,7 @@ var removeCmd = &cobra.Command{
 					systemd.Stop(strings.Replace(filepath.Base(svc.FileName), ".container", ".service", 1))
 				}
 			}
-			fmt.Printf("Remove quadlet %q from path %s?[y/n]", quadlet.Name, quadlet.Path)
+			fmt.Printf("Remove quadlet %q from path %s? [y/N] ", quadlet.Name, quadlet.Path)
 			fmt.Scanln(&confirm)
 			if confirm == "y" {
 				os.RemoveAll(quadlet.Path)
