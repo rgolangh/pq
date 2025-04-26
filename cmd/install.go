@@ -71,8 +71,10 @@ All quadlet repos should have a directory structure where every quadlet is a top
 		if q, ok := quadletsByName[quadletName]; ok {
 			for _, f := range q.Files {
 				if filepath.Ext(f.FileName) == ".container" {
-					err := systemd.Start(strings.Replace(filepath.Base(f.FileName), ".container", ".service", 1))
+					unitName := strings.Replace(filepath.Base(f.FileName), ".container", ".service", 1)
+					err := systemd.Start(unitName)
 					if err != nil {
+						_ = systemd.Journal(unitName)
 						return err
 					}
 
