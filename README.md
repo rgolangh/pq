@@ -35,7 +35,7 @@ Listing quadlets from repo https://github.com/rgolangh/podman-quadlets (default 
 $ pq install wordpress
 Installing quadlet "wordpress"
 [#############             ]
-Reload systemd daemon?[y/N]y
+Reload systemd daemon? [y/N] y
 Reloading systemd daemon for the current user
 Starting service wordpress.service for current user
 Starting service wordpress-db.service for current user
@@ -43,7 +43,7 @@ Starting service wordpress-db.service for current user
 $ pq install wordpress --repo https://github.com/rgolangh/podman-quadlets
 Installing quadlet "wordpress" from https://github.com/rgolangh/podman-quadlets
 [#############             ]
-Reload systemd daemon?[y/N]y
+Reload systemd daemon? [y/N] y
 Reloading systemd daemon for the current user
 Starting service wordpress.service for current user
 Starting service wordpress-db.service for current user
@@ -56,7 +56,7 @@ Stopping service wordpress-db.service for current user
 Stopping service wordpress.service for current user
 Remove quadlet "wordpress" from path /var/home/rgolan/.config/containers/systemd/wordpress?[y/n]y
 removed "wordpress" from path /var/home/rgolan/.config/containers/systemd/wordpress
-Reload systemd daemon?[y/N]y
+Reload systemd daemon? [y/N] y
 Reloading systemd daemon for the current user
 
 $ pq list-services

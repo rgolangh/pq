@@ -60,7 +60,6 @@ var listCmd = &cobra.Command{
 		}
 
 		workDir = path.Join(workDir, repoSubdir)
-		log.Debug("walk dir -------------- " + workDir)
 		filepath.Walk(workDir, func(path string, info fs.FileInfo, err error) error {
 			if info.IsDir() {
 				rel, err := filepath.Rel(workDir, path)

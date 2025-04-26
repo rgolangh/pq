@@ -114,7 +114,7 @@ func ListQuadlets() map[string]Quadlet {
 
 func newQuadletFile(path string, de fs.DirEntry) (QuadletFile, error) {
 	iniFile, err := ini.Load(filepath.Join(path, de.Name()))
-	log.Debugf("ini file loaded %+v", iniFile)
+	log.Debugf("ini file loaded")
 	if err != nil {
 		return QuadletFile{}, err
 	}
