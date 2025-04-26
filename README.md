@@ -11,7 +11,7 @@ Make the binary executable (if necessary), and move it to a directory in your sy
 **Example (Linux):**
 
 ```bash
-curl -L -o - https://github.com/rgolangh/pq/releases/download/v0.0.4/pq_0.0.4_linux_amd64v3.tar.gz | tar -zxv
+curl -L -o - https://github.com/rgolangh/pq/releases/download/v0.0.5/pq_0.0.5_linux_amd64v3.tar.gz | tar -zxv
 # Move it to a directory in your PATH (e.g., /usr/local/bin)
 sudo mv pq /usr/local/bin/pq
 ```
