@@ -25,10 +25,10 @@ import (
 	"strings"
 
 	"github.com/Masterminds/log-go"
+	"github.com/go-git/go-git/v6"
 	"github.com/rgolangh/pq/pkg/quadlet"
 	"github.com/rgolangh/pq/pkg/systemd"
 	"github.com/spf13/cobra"
-	"gopkg.in/src-d/go-git.v4"
 )
 
 var (
@@ -150,7 +150,7 @@ func init() {
 
 func downloadDirectory(repoURL, repoPath, downloadPath string) (string, error) {
 	log.Debug("cloning repo")
-	_, err := git.PlainClone(downloadPath, false, &git.CloneOptions{
+	_, err := git.PlainClone(downloadPath, &git.CloneOptions{
 		Depth: 1,
 		URL:   repoURL,
 	})

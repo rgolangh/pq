@@ -22,8 +22,8 @@ import (
 	"path/filepath"
 
 	"github.com/Masterminds/log-go"
+	"github.com/go-git/go-git/v6"
 	"github.com/spf13/cobra"
-	"gopkg.in/src-d/go-git.v4"
 )
 
 // inspectCmd represents the inspect command
@@ -77,7 +77,7 @@ func init() {
 func outputQuadlet(repoURL, quadletName, downloadPath string, out io.Writer) error {
 	log.Debug("cloning repo")
 	// Clone the repository
-	_, err := git.PlainClone(downloadPath, false, &git.CloneOptions{
+	_, err := git.PlainClone(downloadPath, &git.CloneOptions{
 		Depth: 1,
 		URL:   repoURL,
 	})
