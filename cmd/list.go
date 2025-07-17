@@ -24,9 +24,9 @@ import (
 	"strings"
 
 	"github.com/Masterminds/log-go"
+	"github.com/go-git/go-git/v6"
 	"github.com/rgolangh/pq/pkg/quadlet"
 	"github.com/spf13/cobra"
-	"gopkg.in/src-d/go-git.v4"
 )
 
 // listCmd represents the list command
@@ -51,7 +51,7 @@ var listCmd = &cobra.Command{
 		}
 
 		// Clone the repository
-		_, err = git.PlainClone(workDir, false, &git.CloneOptions{
+		_, err = git.PlainClone(workDir, &git.CloneOptions{
 			Depth: 1,
 			URL:   repoURL,
 		})
